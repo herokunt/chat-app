@@ -23,7 +23,7 @@ const addUser = ({ id, username, room }) => {
   users.push(user)
 
   // If all went well we return user object, otherwise we return an object with an error message.
-  return user
+  return { user }
 }
 
 const removeUser = id => {

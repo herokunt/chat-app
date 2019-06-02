@@ -22,16 +22,14 @@ app.get('/', (req, res, next) => {
   })
 })
 
-app.use((req, res, next) => {
-  res.status(404).render('404', {title: 'Page Not Found'})
-});
-
 io.on('connection', (socket) => {
   console.log('New WebSocket connection')
 
+  // We are using the spread operator to pass username and room as parameters to addUser
   socket.on('join', (options, callback) => {
-    // We are using the spread operator to pass username and room as parameters to addUser
-    const { error, user } = addUser({ id: socket.id, ...options })
+
+    // To use destructuring here the return from addUser (either 'error' or 'user') has to be wrapped in an object
+    const { error, user} = addUser({ id: socket.id, ...options })
 
     if (error){
       return callback(error)
@@ -40,8 +38,8 @@ io.on('connection', (socket) => {
     // Introducing the concept of rooms or chat rooms, but using the 'join' method provided by socketio
     socket.join(user.room)
 
-    socket.emit('message', generateMessage(`Welcome to ${user.room}!`))
-    socket.broadcast.to(user.room).emit('message', generateMessage(`${user.username} has joined`)) // emits to all except current (new) socket.
+    socket.emit('message', generateMessage('Admin', `Welcome to ${user.room}!`))
+    socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined`)) // emits to all except current (new) socket.
 
     callback()
   })
@@ -55,17 +53,21 @@ io.on('connection', (socket) => {
   */
 
   socket.on('sendMessage', (msg, callback) => {
+    const user = getUser(socket.id)
+
     const filter = new Filter()
     if (filter.isProfane(msg)){
       return callback('Profanity is not allowed')
     }
 
-    io.emit('message', generateMessage(msg))
+    io.to(user.room).emit('message', generateMessage(user.username, msg))
     callback()
   })
 
   socket.on('fakeLocation', url => {
-    socket.emit('locationMessage', generateLocationMessage(url))
+    const user = getUser(socket.id)
+
+    io.to(user.room).emit('locationMessage', generateLocationMessage(user.username, url))
   })
 
   // Note this 'disconnect' event happens WITHIN io.on('connection')
@@ -73,7 +75,7 @@ io.on('connection', (socket) => {
     const user = removeUser(socket.id)
 
     if(user){
-      io.to(user.room).emit('message', generateMessage(`${user.username} has left.`))
+      io.to(user.room).emit('message', generateMessage('Admin', `${user.username} has left.`))
     }
 
   })

@@ -13,8 +13,42 @@ const $location = document.getElementById('location')
 const messageTemplate = document.getElementById('message-template').innerHTML
 const locationTemplate = document.getElementById('location-template').innerHTML
 
-// Options
+// Query the search options from url
 const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true })
+
+const autoscroll = () => {
+  // New message element
+  const $newMsg = $messages.lastElementChild
+
+  // Height of the new message
+  const newMsgStyles = getComputedStyle($newMsg) // getComputedStyle() is provided by the browser
+  const newMsgMargin = parseInt(newMsgStyles.marginBottom) // convert to number since the value is a string ("16px")
+  const newMsgHeight = $newMsg.offsetHeight + newMsgMargin // offsetHeight does not include margins, which is why we calculated them right before
+
+  // Visible Height
+  const visibleHeight = $messages.offsetHeight
+
+  // Container Height
+  const containerHeight = $messages.scrollHeight // total height we can scroll through, so total height of the $messages element
+
+  // Distance scrolled from top
+  const scrollOffset = $messages.scrollTop + visibleHeight // We add the visibleHeight because scrollTop gives us the distance scrolled based on the top of the viewport
+
+  // Calculating if we already are at the bottom
+  if (containerHeight - newMsgHeight <= scrollOffset){
+    $messages.scrollTop = $messages.scrollHeight // Setting the scroll bar all the way to the bottom.
+
+    /*
+      A pretty cool alternative: $messages.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"})
+    */
+  }
+
+  /*
+    Note on the conditional logic, if we are scrolling upwards to see previous messages then the scrollOffset will be a smaller number the higher we go.
+    That is why if the total height (containerHeight) - the height of the new message is less than that number, then we know we already are at the bottom.
+    This way we won't autoscroll on every incoming message as that would be a bad user experience.
+  */
+}
 
 /*
   Below reads as: when this socket receives a 'message' event, execute this code
@@ -25,25 +59,29 @@ const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true }
 socket.on('message', (message) => {
   console.log(message)
   const html = Mustache.render(messageTemplate, {
+    username: message.username,
     message: message.text,
     createdAt: moment(message.createdAt).format('h:mm a')
   })
   $messages.insertAdjacentHTML('beforeend', html)
+  autoscroll()
 })
 
 socket.on('locationMessage', location => {
+  console.log(location)
   const html = Mustache.render(locationTemplate, {
+    username: location.username,
     text: location.text,
     url: location.url,
     createdAt: moment(location.createdAt).format('h:mm a')
   })
   $location.insertAdjacentHTML('beforeend', html)
+  autoscroll()
 })
 
 socket.on('broadcast', (broadcast) => {
   console.log(broadcast)
 })
-
 
 document.getElementById('message-form').addEventListener('submit', (e) => {
   e.preventDefault()
@@ -68,8 +106,9 @@ document.getElementById('message-form').addEventListener('submit', (e) => {
 
 $dummyLocationBtn.addEventListener('click', () => {
   $dummyLocationBtn.setAttribute('disabeld', 'disabled')
-  $dummyLocationBtn.classList.add('is-loading')
+  $dummyLocationBtn.classList.add('is-loading') // Bulma style for loading buttons
 
+  // Setting artificial delay
   setTimeout(() => {
     const dummyURL = 'https://www.openstreetmap.org/#map=4/100/100'
     socket.emit('fakeLocation', dummyURL)
@@ -78,7 +117,7 @@ $dummyLocationBtn.addEventListener('click', () => {
   }, 2000)
 })
 
-// this comes from QS above
+// username and room come from QS above
 socket.emit('join', { username, room }, (error) => {
   if(error){
     alert(error)

@@ -1,23 +1,49 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css" rel="stylesheet">
-    <title>Chat App</title>
-  </head>
-  <body>
-    <div class="container">
-      <div class="centered-form__box">
-        <form action="/chat.html">
-          <label>Display Name</label>
-          <input type="text" name="username" placeholder="Username" required>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.2/css/bulma.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+  <title>Chat App</title>
+</head>
+<body>
 
-          <label>Room</label>
-          <input type="text" name="room" placeholder="Room" required>
-          <button>Join</button>
-        </form>
+  <section class="hero">
+    <div class="hero-body has-text-centered">
+      <h1 class="title is-3">Welcome to the chatroom!</h1>
+      <h2 class="subtitle is-5">Enter your username and select a room to get started.</h2>
+    </div>
+  </section>
+
+  <section class="hero is-success is-bold is-small">
+    <div class="hero-body">
+      <div class="container">
+        <div class="column is-4 is-offset-4">
+          <form action="/chat.html">
+            <div class="field">
+              <label class="label">Username</label>
+              <div class="control">
+                <input class="input" type="text" name="username" placeholder="Username">
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Room</label>
+              <div class="control">
+                <input class="input" type="text" name="room" placeholder="South Philly">
+              </div>
+            </div>
+            <div class="field mt-2">
+              <div class="control">
+                <button class="button is-dark is-fullwidth">
+                  Join Room!
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-  </body>
+  </section>
+</body>
 </html>
