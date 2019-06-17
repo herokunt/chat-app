@@ -8,15 +8,33 @@ const $formBtn = document.getElementById('send-btn')
 const $dummyLocationBtn = document.getElementById('dummy-location')
 const $messages = document.getElementById('messages')
 const $location = document.getElementById('location')
+const $participants = document.getElementById('participants')
+const $parentDiv = document.querySelector('.this-one')
 
 // Templates
 const messageTemplate = document.getElementById('message-template').innerHTML
 const locationTemplate = document.getElementById('location-template').innerHTML
+const chatboardTemplate = document.getElementById('participantList-template').innerHTML
 
 // Query the search options from url
 const { username, room } = Qs.parse(location.search, { ignoreQueryPrefix: true })
 
+const autoScroll2 = () => {
+  const $newMessage = $messages.lastElementChild
+
+  const newMessageStyles = getComputedStyle($newMessage)
+  const newMessageMargin = parseInt(newMessageStyles.marginBottom)
+  const newMessageHeight = $newMessage.offsetHeight
+}
+
 const autoscroll = () => {
+
+/*
+  offsetTop is what to use for this. scrollTop returns the amount you scrolled in that particular container. So because inner doesn't have a scrollbar, it never scrolls, and therefore scrollTop is 0.
+  But offsetTop, on the other hand, returns the distance of the current element relative to the top of the offsetParent node.
+  So the formula to get the amount scrolled of an element based on window, would be:
+  inner.offsetTop - document.body.scrollTop;
+*/
   // New message element
   const $newMsg = $messages.lastElementChild
 
@@ -37,7 +55,6 @@ const autoscroll = () => {
   // Calculating if we already are at the bottom
   if (containerHeight - newMsgHeight <= scrollOffset){
     $messages.scrollTop = $messages.scrollHeight // Setting the scroll bar all the way to the bottom.
-
     /*
       A pretty cool alternative: $messages.scrollIntoView({behavior: "smooth", block: "end", inline: "nearest"})
     */
@@ -56,8 +73,8 @@ const autoscroll = () => {
   and moment.js to format the timestamp in a human readable way.
 */
 
-socket.on('message', (message) => {
-  console.log(message)
+socket.on('message', message => {
+  // console.log(message)
   const html = Mustache.render(messageTemplate, {
     username: message.username,
     message: message.text,
@@ -68,7 +85,7 @@ socket.on('message', (message) => {
 })
 
 socket.on('locationMessage', location => {
-  console.log(location)
+  // console.log(location)
   const html = Mustache.render(locationTemplate, {
     username: location.username,
     text: location.text,
@@ -77,6 +94,15 @@ socket.on('locationMessage', location => {
   })
   $location.insertAdjacentHTML('beforeend', html)
   autoscroll()
+})
+
+socket.on('newParticipant', participants => {
+  // console.log(participants)
+  const html = Mustache.render(chatboardTemplate, {
+    participants,
+    room: participants[0].room
+  })
+  $participants.innerHTML = html
 })
 
 socket.on('broadcast', (broadcast) => {
@@ -100,7 +126,7 @@ document.getElementById('message-form').addEventListener('submit', (e) => {
       return console.log(err)
     }
 
-    console.log('message delivered')
+    // console.log('message delivered')
   })
 })
 

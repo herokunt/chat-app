@@ -38,8 +38,14 @@ io.on('connection', (socket) => {
     // Introducing the concept of rooms or chat rooms, but using the 'join' method provided by socketio
     socket.join(user.room)
 
+    // Welcome message
     socket.emit('message', generateMessage('Admin', `Welcome to ${user.room}!`))
+
+    // New user joined message
     socket.broadcast.to(user.room).emit('message', generateMessage('Admin', `${user.username} has joined`)) // emits to all except current (new) socket.
+
+    // Get chatroom participant list and send data to client
+    io.to(user.room).emit('newParticipant', getUsersInRoom(user.room))
 
     callback()
   })
